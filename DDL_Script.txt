@@ -1,0 +1,146 @@
+CREATE TABLE Availability
+(
+  product_id character(8) NOT NULL,
+  seller_id character(6) NOT NULL,
+  location_id decimal(6,0) NOT NULL,
+  price integer NOT NULL,
+  PRIMARY KEY (product_id, seller_id, location_id),
+  FOREIGN KEY (location_id) REFERENCES Location (pincode)  ON UPDATE NO ACTION ON DELETE NO ACTION,
+  FOREIGN KEY (product_id) REFERENCES Product (product_id)  ON UPDATE NO ACTION ON DELETE      NO ACTION,
+  FOREIGN KEY (seller_id) REFERENCES Seller (seller_id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+
+
+
+CREATE TABLE Brand
+(
+  brand_id character(6) NOT NULL,
+  b_name varchar(20) NOT NULL,
+  PRIMARY KEY (brand_id)
+)
+
+
+CREATE TABLE Cart
+(
+  customer_id character(10) NOT NULL,
+  product_id character(8) NOT NULL,
+  seller_id character(6) NOT NULL,
+  location_id decimal(6,0) NOT NULL,
+  quantity smallint NOT NULL,
+  PRIMARY KEY (customer_id, product_id, seller_id, location_id),
+FOREIGN KEY (customer_id) REFERENCES Customer(customer_id)  ON UPDATE NO ACTION ON DELETE NO ACTION,
+  FOREIGN KEY (product_id, seller_id, location_id) REFERENCES Availability(product_id, seller_id, location_id) ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+
+CREATE TABLE Category
+(
+  category_id character(5) NOT NULL,
+  c_name varchar(20) NOT NULL,
+  sup_category_id character(5),
+  PRIMARY KEY (category_id),
+  FOREIGN KEY (sup_category_id) REFERENCES Category (category_id) 
+      ON UPDATE CASCADE ON DELETE SET NULL
+)
+
+
+CREATE TABLE Contains
+(
+  seller_id character(6) NOT NULL,
+  product_id character(8) NOT NULL,
+  location_id decimal(6,0) NOT NULL,
+  order_id character(10) NOT NULL,
+  shipper_id character(6) NOT NULL,
+  quantity smallint NOT NULL,
+  PRIMARY KEY (seller_id, product_id, location_id, order_id, shipper_id),
+FOREIGN KEY (order_id) REFERENCES Customerorder (order_id)  ON UPDATE NO ACTION ON DELETE NO ACTION,
+  FOREIGN KEY (seller_id, product_id, location_id)  REFERENCES Availability (seller_id, product_id, location_id ) ON UPDATE NO ACTION ON DELETE NO ACTION,
+  FOREIGN KEY (shipper_id) REFERENCES Shipper (shipper_id) ON UPDATE NO ACTION ON DELETE NO ACTION)
+
+
+CREATE TABLE Customer
+(
+  customer_id character(10) NOT NULL,
+  c_name varchar(20) NOT NULL,
+  c_email varchar(20) NOT NULL,
+  contact_number decimal(10,0),
+  PRIMARY KEY (customer_id)
+)
+
+
+CREATE TABLE Customerorder
+(
+  order_id character(10) NOT NULL,
+  order_date date NOT NULL,
+  customer_id character(10),
+  payment_id character(10),
+  location_id decimal(6,0),
+PRIMARY KEY (order_id),
+ FOREIGN KEY (customer_id) REFERENCES Customer (customer_id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+FOREIGN KEY (location_id) REFERENCES Location (pincode) ON UPDATE NO ACTION ON DELETE NO ACTION,
+  FOREIGN KEY (payment_id) REFERENCES Payment (payment_id) ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+
+
+
+CREATE TABLE Deal
+(
+  deal_id character(5) NOT NULL,
+  dis_percentage smallint NOT NULL,
+  PRIMARY KEY (deal_id)
+)
+
+
+
+CREATE TABLE Location
+(
+  pincode decimal(6,0) NOT NULL,
+  state varchar(20) NOT NULL,
+  city varchar(20) NOT NULL,
+  area_name varchar(20),
+  PRIMARY KEY (pincode)
+)
+
+
+
+CREATE TABLE Payment
+(
+  payment_id character(10) NOT NULL,
+  payment_date date,
+  payment_type varchar(20) NOT NULL,
+  amount integer,
+  PRIMARY KEY (payment_id)
+)
+
+
+
+CREATE TABLE Product(
+  p_name varchar(20) NOT NULL,
+  product_id character(8) NOT NULL,
+  brand_id character(6),
+  category_id character(5),
+  deal_id character(5),
+PRIMARY KEY (product_id),
+FOREIGN KEY (brand_id) REFERENCES Brand (brand_id) ON UPDATE NO ACTION ON DELETE NO ACTION,
+FOREIGN KEY (category_id) REFERENCES Category (category_id) UPDATE NO ACTION ON DELETE NO ACTION,
+FOREIGN KEY (deal_id) REFERENCES Deal (deal_id)  ON UPDATE NO ACTION ON DELETE NO ACTION
+)
+
+
+CREATE TABLE Seller
+(
+  seller_id character(6) NOT NULL,
+  customer_rating smallint,
+  s_name varchar(20) NOT NULL,
+  PRIMARY KEY (seller_id)
+)
+
+
+CREATE TABLE Shipper
+(
+  shipper_id character(6) NOT NULL,
+  sh_name varchar(20) NOT NULL,
+  PRIMARY KEY (shipper_id)
+)
+
+

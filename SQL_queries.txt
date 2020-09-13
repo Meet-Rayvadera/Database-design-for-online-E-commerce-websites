@@ -1,0 +1,144 @@
+********************************************************************************************************************************************************
+********************************************************************************************************************************************************
+Queries
+********************************************************************************************************************************************************
+********************************************************************************************************************************************************
+
+
+********************************************************************************************************************************************************
+1) Best selling product of particular category (based on number of sell)?
+
+SELECT * FROM (SELECT * FROM (SELECT category_id,product_id,totalsell FROM ((SELECT p.product_id,sum(quantity) AS totalsell FROM contains NATURAL JOIN product AS p GROUP BY p.product_id) AS pc NATURAL JOIN product ) AS ppc NATURAL JOIN (SELECT category_id,c_name FROM category) AS c) AS cppc WHERE (category_id,totalsell) IN
+(SELECT category_id,max(totalsell) FROM (SELECT category_id,product_id,totalsell FROM ((SELECT p.product_id,sum(quantity) AS totalsell FROM contains NATURAL JOIN product AS p GROUP BY p.product_id) AS pc NATURAL JOIN product ) AS ppc NATURAL JOIN (SELECT category_id,c_name FROM category) AS c) AS pppp GROUP BY category_id)) AS temp NATURAL JOIN product
+
+
+********************************************************************************************************************************************************
+2) Products with particular category having maximum deals and discounts?
+
+SELECT category_id,c_name,product_id,p_name,brand_id,dis_percentage FROM (SELECT * FROM product NATURAL JOIN deal WHERE (category_id,dis_percentage) IN (SELECT category_id,max(dis_percentage) FROM product NATURAL JOIN deal group by category_id)) AS cc NATURAL JOIN (SELECT category_id,c_name FROM category) AS c
+
+********************************************************************************************************************************************************
+3) Email or Mobile number of Most valuable(or frequent) customer in a particular location (based on number of sells)?
+
+SELECT three.location_id, three.customer_id,c_email, c_name, three.total FROM (SELECT * FROM (SELECT co.location_id, co.customer_id, count(product_id) AS total FROM customerorder AS co JOIN contains AS c ON co.order_id=c.order_id GROUP BY co.location_id, co.customer_id) AS one WHERE (one.location_id, total) IN (SELECT two.location_id, max(total) FROM (SELECT co.location_id, co.customer_id, count(product_id) AS total FROM customerorder AS co JOIN contains AS c ON co.order_id=c.order_id GROUP BY co.location_id, co.customer_id) AS two GROUP BY location_id) ORDER BY location_id) AS three NATURAL JOIN customer ORDER BY three.location_id
+
+********************************************************************************************************************************************************
+
+4) Customer preferred category?
+
+SELECT * FROM (SELECT * FROM (SELECT customer_id, category_id, sum(quantity) AS tot_quant  FROM product NATURAL JOIN contains AS pc JOIN customerorder AS co ON pc.order_id=co.order_id GROUP BY customer_id, category_id) AS abc WHERE (customer_id, tot_quant) IN (SELECT customer_id, max(tot_quant) AS tot_quant FROM (SELECT customer_id, category_id, sum(quantity) AS tot_quant FROM product NATURAL JOIN contains AS pc JOIN customerorder AS co ON pc.order_id=co.order_id GROUP BY customer_id, category_id) AS css GROUP BY customer_id)) AS acb NATURAL JOIN category ORDER BY customer_id
+
+********************************************************************************************************************************************************
+
+5) Total money spent by each customer?
+
+SELECT sum(amount) AS money_spent, customer_id FROM customer NATURAL JOIN customerorder NATURAL JOIN payment GROUP BY customer_id ORDER BY money_spent;
+
+********************************************************************************************************************************************************
+6) Best brand by average deal in a particular category?
+
+SELECT category_id,c_name,brand_id,b_name,avg_deal FROM category_wise_brand NATURAL JOIN (SELECT brand_id,category_id,avg(dis_percentage) AS avg_deal FROM product NATURAL JOIN deal group by brand_id,category_id) AS bdc WHERE (category_id,avg_deal) IN (SELECT category_id, max(avg_deal) FROM (SELECT brand_id,category_id,avg(dis_percentage) AS avg_deal FROM product NATURAL JOIN deal group by brand_id,category_id) AS bdc group by category_id)
+
+********************************************************************************************************************************************************
+
+7) Customer preferred brand?
+SELECT * FROM (SELECT * FROM (SELECT customer_id, brand_id, sum(quantity) AS tot_quant  FROM product NATURAL JOIN contains AS pc JOIN customerorder AS co ON pc.order_id=co.order_id GROUP BY customer_id, brand_id) AS abc WHERE (customer_id, tot_quant) IN (SELECT customer_id, max(tot_quant) AS tot_quant FROM (SELECT customer_id, brand_id, sum(quantity) AS tot_quant FROM product NATURAL JOIN contains AS pc JOIN customerorder AS co ON pc.order_id=co.order_id GROUP BY customer_id, brand_id) AS css GROUP BY customer_id)) AS acb NATURAL JOIN brand ORDER BY customer_id;
+
+********************************************************************************************************************************************************
+
+8) Customer prefered seller?
+
+SELECT customer_id,seller_id,s_name,tot_quant,customer_rating FROM (SELECT * FROM (SELECT customer_id, seller_id, sum(quantity) AS tot_quant  FROM product NATURAL JOIN contains AS pc JOIN customerorder AS co ON pc.order_id=co.order_id GROUP BY customer_id, seller_id) AS abc WHERE (customer_id, tot_quant) IN (SELECT customer_id, max(tot_quant) AS tot_quant FROM (SELECT customer_id, seller_id, sum(quantity) AS tot_quant FROM product NATURAL JOIN contains AS pc JOIN customerorder AS co ON pc.order_id=co.order_id GROUP BY customer_id, seller_id) AS css GROUP BY customer_id)) AS acb NATURAL JOIN seller ORDER BY customer_id
+
+********************************************************************************************************************************************************
+
+9) Customerwise most added brand in cart?
+
+SELECT customer_id, brand_id, b_name, cartquantity FROM (SELECT * FROM (SELECT * FROM (SELECT customer_id, brand_id, count(*) AS cartquantity FROM cart NATURAL JOIN availability NATURAL JOIN product NATURAL JOIN customer GROUP BY brand_id, customer_id) AS one) AS two WHERE (customer_id, cartquantity) in (SELECT customer_id, max(cartquantity) AS mostusedbrand FROM (SELECT customer_id, brand_id, count(*) AS cartquantity FROM cart NATURAL JOIN availability NATURAL JOIN product NATURAL JOIN customer GROUP BY brand_id, customer_id) AS three GROUP BY customer_id)) AS four NATURAL JOIN brand
+
+********************************************************************************************************************************************************
+
+10) Customerwise most added category in cart?
+
+SELECT customer_id, category_id, c_name, cartquantity FROM (SELECT * FROM (SELECT * FROM (SELECT customer_id, category_id, count(*) AS cartquantity FROM cart NATURAL JOIN availability NATURAL JOIN product NATURAL JOIN customer GROUP BY category_id, customer_id) AS one) AS two WHERE (customer_id, cartquantity) in (SELECT customer_id, max(cartquantity) AS mostusedcategory FROM (SELECT customer_id, category_id, count(*) AS cartquantity FROM cart NATURAL JOIN availability NATURAL JOIN product NATURAL JOIN customer GROUP BY category_id, customer_id) AS three GROUP BY customer_id)) AS four NATURAL JOIN category    
+
+********************************************************************************************************************************************************
+
+11) Find customer preferred brand in each and every category?
+
+SELECT four.customer_id, c.c_name, b.b_name, four.max FROM (SELECT two.customer_id, two.category_id, two.brand_id, two.total AS max FROM (SELECT * FROM (SELECT co.customer_id, p.category_id, p.brand_id, sum(c.quantity) AS total FROM customerorder AS co join contains AS c ON c.order_id=co.order_id join product AS p ON p.product_id=c.product_id GROUP BY co.customer_id, p.category_id, p.brand_id) AS three) AS two WHERE (two.customer_id, two.category_id, two.total) IN (SELECT one.customer_id, one.category_id, max(total) FROM ( SELECT co.customer_id, p.category_id, p.brand_id, sum(c.quantity) AS total FROM customerorder AS co join contains AS c ON c.order_id=co.order_id join product AS p ON p.product_id=c.product_id GROUP BY co.customer_id, p.category_id, p.brand_id) AS one GROUP BY one.customer_id, one.category_id)) AS four NATURAL JOIN category AS c NATURAL JOIN brand AS b ORDER BY four.customer_id, c.c_name
+
+********************************************************************************************************************************************************
+
+12) Location wise different products?
+
+SELECT location_id, count(product_id) AS no_of_diff_products FROM availability GROUP BY location_id
+
+
+
+********************************************************************************************************************************************************
+********************************************************************************************************************************************************
+Views
+********************************************************************************************************************************************************
+********************************************************************************************************************************************************
+
+1) Product wise sell
+
+CREATE VIEW product_wise_sell AS (SELECT * FROM (SELECT product_id,sum(quantity) FROM contains group by product_id) AS p NATURAL JOIN product)    
+
+********************************************************************************************************************************************************
+
+
+2) Brand wise sell
+
+CREATE VIEW brand_wise_sell AS SELECT * FROM (SELECT brand_id,sum(sell) FROM (SELECT product_id,sum(quantity) AS sell FROM contains group by product_id) AS p NATURAL JOIN product group by brand_id) AS bs NATURAL JOIN brand
+
+********************************************************************************************************************************************************
+
+
+
+3) Category_wise_sell
+
+CREATE VIEW category_wise_sell AS SELECT * FROM (SELECT category_id,sum(sell) FROM (SELECT product_id,sum(quantity) AS sell FROM contains group by product_id) AS p NATURAL JOIN product group by category_id) AS cs NATURAL JOIN category AS c
+
+********************************************************************************************************************************************************
+
+
+
+4) Seller_wise_sell
+
+CREATE VIEW seller_wise_sell AS (SELECT * FROM(SELECT seller_id,sum(quantity) AS sell FROM contains group by seller_id) AS s NATURAL JOIN seller)
+
+********************************************************************************************************************************************************
+
+
+
+5) Location_wise_sell
+
+CREATE VIEW location_wise_sell AS SELECT * FROM (SELECT location_id AS pincode,sum(quantity) AS sell FROM contains group by location_id) AS l NATURAL JOIN location 
+
+********************************************************************************************************************************************************
+
+
+
+6) Shipment_Quantities (quantities shipped by shippers)
+
+CREATE VIEW shipment_quant AS SELECT * FROM (SELECT shipper_id, sum(quantity) AS Qua_shipped FROM contains group by shipper_id) AS s NATURAL JOIN shipper
+
+********************************************************************************************************************************************************
+
+
+
+7) Category_wise_brand
+
+CREATE VIEW category_wise_brand AS SELECT DISTINCT category_id,c_name,brand_id,b_name FROM (SELECT category_id,c_name FROM category) AS c NATURAL JOIN product NATURAL JOIN brand ORDER BY category_id
+
+********************************************************************************************************************************************************
+
+
+8) Product_city_availability (Shows available cities for Products)
+
+CREATE VIEW product_city_avaibility AS SELECT distinct product_id, p_name, city FROM product NATURAL JOIN availability NATURAL JOIN location ORDER BY product_id
+
+
+

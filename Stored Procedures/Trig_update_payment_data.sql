@@ -1,0 +1,1 @@
+CREATE TRIGGER Trig_update_payment_data AFTER INSERT OR UPDATE ON customerorder FOR EACH ROW EXECUTE PROCEDURE update_payment_data();
